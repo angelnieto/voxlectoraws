@@ -1,14 +1,14 @@
 package es.ricardo.webservices;
 
-import javax.ws.rs.Produces;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-@Path("/MyRESTApp")
+@RestController
+@RequestMapping("/MyRESTApp")
 public class HelloWorldResource {
 
-	@GET()
-	@Produces("text/plain")
+	@GetMapping(produces = {"text/plain"})
 	public String sayHello() {
 	    return "Hello Ricardo!";
 	}

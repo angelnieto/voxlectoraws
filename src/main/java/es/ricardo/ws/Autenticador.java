@@ -21,15 +21,17 @@ import java.util.List;
 
 import javax.imageio.ImageIO;
 import javax.servlet.ServletContext;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.Response;
+
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
@@ -55,18 +57,18 @@ import es.ricardo.ws.ParsedExampleDataSet;
 import es.ricardo.ws.Respuesta;
 import es.ricardo.ws.XmlSerializer;
 
-@Path("/Autenticador")
+@RestController
+@RequestMapping("/autenticador")
 public class Autenticador {
 
-	@Context
-	private ServletContext sContext;
+//	@Context
+//	private ServletContext sContext;
+	
 	//private java.util.Properties properties;
 	private final String serverFolder=System.getProperty("jboss.server.base.dir")+"/tmp/vfs/imagenes";
 	 
-	@Path("/post")
-    @POST()
-	@Produces("application/json; charset=UTF-8")
-	 public Response getDescription(String json) {
+	@PostMapping( produces = {"application/json; charset=UTF-8"})
+	 public ResponseEntity<String> getDescription(@RequestBody String json) {
 		 Respuesta respuesta=null;
 		 //int error=-1;
 		 int veces=-1;
@@ -169,7 +171,7 @@ public class Autenticador {
 		}
 
 		if(respuesta!=null)
-		   	return Response.status(201).entity(new Gson().toJson(respuesta)).build();
+		   	return new ResponseEntity<String>(new Gson().toJson(respuesta), HttpStatus.CREATED);
 		else
 		   	return null;
 	 }
@@ -208,7 +210,8 @@ public class Autenticador {
 	    }
 
 	private java.io.File getTempPkc12File() throws IOException {
-	    InputStream pkc12Stream = sContext.getResourceAsStream("/assets/98010a5ea85c050f3883584897d9f2585f8c375a-privatekey.p12");
+//	    InputStream pkc12Stream = sContext.getResourceAsStream("/assets/98010a5ea85c050f3883584897d9f2585f8c375a-privatekey.p12");
+	    InputStream pkc12Stream = Autenticador.class.getResourceAsStream("/assets/98010a5ea85c050f3883584897d9f2585f8c375a-privatekey.p12");
 	    java.io.File tempPkc12File = java.io.File.createTempFile("certificado", "p12");
 	    OutputStream tempFileStream = new FileOutputStream(tempPkc12File);
 	
