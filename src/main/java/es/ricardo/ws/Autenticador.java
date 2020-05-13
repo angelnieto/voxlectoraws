@@ -65,7 +65,7 @@ public class Autenticador {
 //	private ServletContext sContext;
 	
 	//private java.util.Properties properties;
-	private final String serverFolder=System.getProperty("jboss.server.base.dir")+"/tmp/vfs/imagenes";
+	private String serverFolder=System.getProperty("jboss.server.base.dir")+"/tmp/vfs/imagenes";
 	 
 	@PostMapping( produces = {"application/json; charset=UTF-8"})
 	 public ResponseEntity<String> getDescription(@RequestBody String json) {
@@ -77,7 +77,15 @@ public class Autenticador {
 		 
 		 try {
 		     //properties.load(Configuration.class.getClassLoader().getResourceAsStream("voxlectora.properties"));
-		    
+	         
+			 //verifico que existe la propiedad <jboss.server.base.dir>
+			 if(System.getProperty("jboss.server.base.dir") == null) {
+	        	   if(("MAC OS X").equalsIgnoreCase(System.getProperty("os.name"))) {
+	        		   serverFolder = "/Users/ricardomolinacuesta/Documents/voxlectora/tmp/vfs/imagenes";
+	        	   }
+	           }
+			 
+			 
 	    	JsonParser parser=new JsonParser();
 			JsonObject jsonObject=parser.parse(json.trim()).getAsJsonObject();	    	
 	    	//guardo la imagen en el servidor
