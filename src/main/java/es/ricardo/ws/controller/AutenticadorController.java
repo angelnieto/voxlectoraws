@@ -1,12 +1,8 @@
 package es.ricardo.ws.controller;
 
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-
-import com.google.api.services.drive.model.File;
-import com.google.api.services.drive.model.FileList;
-
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,11 +14,8 @@ import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 
 import javax.imageio.ImageIO;
-import javax.servlet.ServletContext;
-
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
@@ -30,7 +23,6 @@ import javax.xml.parsers.SAXParserFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -41,9 +33,6 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.http.FileContent;
 import com.google.api.client.http.GenericUrl;
@@ -53,15 +42,21 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.jackson.JacksonFactory;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
+import com.google.api.services.drive.model.File;
+import com.google.api.services.drive.model.FileList;
 import com.google.api.services.drive.model.ParentReference;
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import es.ricardo.ws.Base64;
 import es.ricardo.ws.ExampleHandler;
 import es.ricardo.ws.ParsedExampleDataSet;
 import es.ricardo.ws.Respuesta;
 import es.ricardo.ws.XmlSerializer;
-import es.ricardo.ws.config.VoxlectoraConfig;
+import es.ricardo.ws.config.DriveConfig;
+import es.ricardo.ws.config.ServerConfig;
 
 @RestController
 @RequestMapping("/autenticador")
@@ -70,18 +65,16 @@ public class AutenticadorController {
 	private static Logger log = LoggerFactory.getLogger(AutenticadorController.class);
 	
 	private String serverFolder;
+	private DriveConfig config;
 	 
     @Autowired 
-    public AutenticadorController(VoxlectoraConfig config) {
-    	if(config != null) {
-    		this.serverFolder = config.getTempFolder();
+    public AutenticadorController(ServerConfig sConfig, DriveConfig dConfig) {
+    	if(sConfig != null) {
+    		this.serverFolder = sConfig.getTempFolder();
     	}
+    	this.config = dConfig;
     }
     
-//	private String serverFolder= System.getProperty("jboss.server.base.dir")+"/tmp/vfs/imagenes";
-
-
-	 
 	@PostMapping( produces = {"application/json; charset=UTF-8"})
 	 public ResponseEntity<String> getDescription(@RequestBody String json) {
 		 Respuesta respuesta=null;
@@ -90,14 +83,14 @@ public class AutenticadorController {
 		 String texto="";
 		 
 		 try {
-		      //verifico que existe la propiedad server.tempFolder
-			 	log.info("serverFolder :" + serverFolder);
+		        //verifico que existe la propiedad server.tempFolder
+			 log.info("serverFolder :" + serverFolder);
 			 
-			  if(serverFolder == null) {
+			 if(serverFolder == null) {
 	        	   if(("MAC OS X").equalsIgnoreCase(System.getProperty("os.name"))) {
 	        		   serverFolder = "/Users/ricardomolinacuesta/Documents/voxlectora/tmp/vfs/imagenes";
 	        	   }
-	           }
+	         }
 			 
 			 
 	    	JsonParser parser=new JsonParser();
@@ -221,7 +214,7 @@ public class AutenticadorController {
 	    GoogleCredential credential = new GoogleCredential.Builder()
 	    	.setTransport(httpTransport)
 	    	.setJsonFactory(jsonFactory)
-	    	.setServiceAccountId("466180996139-ba9tuu9oq02acnbvrkgkpsl8tfersrt8@developer.gserviceaccount.com")
+	    	.setServiceAccountId(config.getAccount())
 	    	.setServiceAccountScopes(scopes)
 	    	.setServiceAccountPrivateKeyFromP12File(getTempPkc12File())
 	    	.build();

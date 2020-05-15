@@ -6,8 +6,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@ConfigurationProperties(prefix="server")
-public class VoxlectoraConfig {
+@ConfigurationProperties(prefix = "server")
+public class ServerConfig {
 
 	/**  path to save images  **/
 	@NotNull private String tempFolder;
