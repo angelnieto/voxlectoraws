@@ -1,4 +1,4 @@
-package es.ricardo.ws;
+package es.ricardo.ws.controller;
 
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
@@ -18,6 +18,7 @@ import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 import javax.imageio.ImageIO;
 import javax.servlet.ServletContext;
@@ -26,6 +27,10 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -39,7 +44,6 @@ import org.xml.sax.XMLReader;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
-
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.http.FileContent;
 import com.google.api.client.http.GenericUrl;
@@ -52,20 +56,31 @@ import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.drive.model.ParentReference;
 import com.google.gson.Gson;
 
+import es.ricardo.ws.Base64;
 import es.ricardo.ws.ExampleHandler;
 import es.ricardo.ws.ParsedExampleDataSet;
 import es.ricardo.ws.Respuesta;
 import es.ricardo.ws.XmlSerializer;
+import es.ricardo.ws.config.VoxlectoraConfig;
 
 @RestController
 @RequestMapping("/autenticador")
-public class Autenticador {
+public class AutenticadorController {
 
-//	@Context
-//	private ServletContext sContext;
+	private static Logger log = LoggerFactory.getLogger(AutenticadorController.class);
 	
-	//private java.util.Properties properties;
-	private String serverFolder=System.getProperty("jboss.server.base.dir")+"/tmp/vfs/imagenes";
+	private String serverFolder;
+	 
+    @Autowired 
+    public AutenticadorController(VoxlectoraConfig config) {
+    	if(config != null) {
+    		this.serverFolder = config.getTempFolder();
+    	}
+    }
+    
+//	private String serverFolder= System.getProperty("jboss.server.base.dir")+"/tmp/vfs/imagenes";
+
+
 	 
 	@PostMapping( produces = {"application/json; charset=UTF-8"})
 	 public ResponseEntity<String> getDescription(@RequestBody String json) {
@@ -73,13 +88,12 @@ public class Autenticador {
 		 //int error=-1;
 		 int veces=-1;
 		 String texto="";
-		 //this.properties = new java.util.Properties();
 		 
 		 try {
-		     //properties.load(Configuration.class.getClassLoader().getResourceAsStream("voxlectora.properties"));
-	         
-			 //verifico que existe la propiedad <jboss.server.base.dir>
-			 if(System.getProperty("jboss.server.base.dir") == null) {
+		      //verifico que existe la propiedad server.tempFolder
+			 	log.info("serverFolder :" + serverFolder);
+			 
+			  if(serverFolder == null) {
 	        	   if(("MAC OS X").equalsIgnoreCase(System.getProperty("os.name"))) {
 	        		   serverFolder = "/Users/ricardomolinacuesta/Documents/voxlectora/tmp/vfs/imagenes";
 	        	   }
@@ -219,7 +233,7 @@ public class Autenticador {
 
 	private java.io.File getTempPkc12File() throws IOException {
 //	    InputStream pkc12Stream = sContext.getResourceAsStream("/assets/98010a5ea85c050f3883584897d9f2585f8c375a-privatekey.p12");
-	    InputStream pkc12Stream = Autenticador.class.getResourceAsStream("/assets/98010a5ea85c050f3883584897d9f2585f8c375a-privatekey.p12");
+	    InputStream pkc12Stream = AutenticadorController.class.getResourceAsStream("/assets/98010a5ea85c050f3883584897d9f2585f8c375a-privatekey.p12");
 	    java.io.File tempPkc12File = java.io.File.createTempFile("certificado", "p12");
 	    OutputStream tempFileStream = new FileOutputStream(tempPkc12File);
 	
