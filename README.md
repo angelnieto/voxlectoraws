@@ -1,3 +1,8 @@
-The OpenShift `jbossas` cartridge documentation can be found at:
+** Deploy app in AppEngine with prod profile : **
+mvn clean package -Dspring.profiles.active=prod appengine:deploy
 
-https://github.com/openshift/origin-server/tree/master/cartridges/openshift-origin-cartridge-jbossas/README.md
+** Read production logs : **
+gcloud app logs read
+
+** Read production logs in streaming mode : **
+gcloud app logs tail
