@@ -1,15 +1,18 @@
 package es.ricardo.webservices;
 
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/MyRESTApp")
 public class HelloWorldResource {
+	
+	@Autowired
+	private Environment environment;
 
-	@GetMapping(produces = {"text/plain"})
+	@RequestMapping(path = "/MyRESTApp", produces = {"text/plain"})
 	public String sayHello() {
-	    return "Hello Ricardo!";
+	    return "Hello " + environment.getActiveProfiles()[0].toString() + " user!";
 	}
 }
