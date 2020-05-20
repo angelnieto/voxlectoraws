@@ -13,6 +13,10 @@ public class HelloWorldResource {
 
 	@RequestMapping(path = "/MyRESTApp", produces = {"text/plain"})
 	public String sayHello() {
-	    return "Hello " + environment.getActiveProfiles()[0].toString() + " user!";
+		String profile = "default";
+		if(environment.getActiveProfiles().length > 0) {
+			profile = environment.getActiveProfiles()[0].toString();
+		}
+	    return "Hello " + profile + " user!";
 	}
 }
