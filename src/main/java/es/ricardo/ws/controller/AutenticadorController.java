@@ -87,8 +87,6 @@ public class AutenticadorController {
 		 String texto="";
 		 
 		 try {
-		        //verifico que existe la propiedad server.tempFolder
-			 log.info("serverFolder :" + serverFolder);
 			 
 			 if(serverFolder == null) {
 	        	   if(("MAC OS X").equalsIgnoreCase(System.getProperty("os.name"))) {
@@ -217,11 +215,18 @@ public class AutenticadorController {
 	    HttpTransport httpTransport = new NetHttpTransport();
         GsonFactory jsonFactory = new GsonFactory();
 	  
-        final GoogleCredentials credentials = GoogleCredentials.fromStream(new FileInputStream(this.credentialsFile))
-        		.createScoped(Lists.newArrayList("https://www.googleapis.com/auth/drive.file"));
-        HttpRequestInitializer requestInitializer = new HttpCredentialsAdapter(credentials); 
-	    
-	      Drive service = new Drive.Builder(httpTransport, jsonFactory, null).setHttpRequestInitializer(requestInitializer).build();
+        Drive service = null;
+        try {
+	        final GoogleCredentials credentials = GoogleCredentials.fromStream(new FileInputStream(this.credentialsFile))
+	        		.createScoped(Lists.newArrayList("https://www.googleapis.com/auth/drive.file"));
+	        HttpRequestInitializer requestInitializer = new HttpCredentialsAdapter(credentials); 
+		    
+	        service = new Drive.Builder(httpTransport, jsonFactory, null).setHttpRequestInitializer(requestInitializer).build();
+        
+        }catch(Exception e) {
+        	log.error(e.getMessage());
+        	throw e;
+        }
 	           
 	      return service;
 	}
