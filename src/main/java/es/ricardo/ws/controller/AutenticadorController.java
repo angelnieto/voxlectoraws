@@ -67,13 +67,11 @@ public class AutenticadorController {
 	private static Logger log = LoggerFactory.getLogger(AutenticadorController.class);
 	
 	private String serverFolder;
-	private String credentialsFile;
 	 
     @Autowired 
     public AutenticadorController(ServerConfig sConfig) {
     	if(sConfig != null) {
     		this.serverFolder = sConfig.getTempFolder();
-    		this.credentialsFile = sConfig.getCredentials();
     	}
     }
     
@@ -198,6 +196,7 @@ public class AutenticadorController {
 	    try{	
 	    	return getDriveService();
 	    }catch(Exception e){
+	    	log.error(e.getMessage());
 	    	throw new Exception("reloj");
 	    }
 	 }
@@ -215,20 +214,13 @@ public class AutenticadorController {
 	    HttpTransport httpTransport = new NetHttpTransport();
         GsonFactory jsonFactory = new GsonFactory();
 	  
-        Drive service = null;
-        try {
-	        final GoogleCredentials credentials = GoogleCredentials.fromStream(new FileInputStream(this.credentialsFile))
-	        		.createScoped(Lists.newArrayList("https://www.googleapis.com/auth/drive.file"));
-	        HttpRequestInitializer requestInitializer = new HttpCredentialsAdapter(credentials); 
+        final GoogleCredentials credentials = GoogleCredentials.fromStream(AutenticadorController.class.getResourceAsStream("/assets/serviceaccount.json"))
+	            .createScoped(Lists.newArrayList("https://www.googleapis.com/auth/drive.file"));
+        HttpRequestInitializer requestInitializer = new HttpCredentialsAdapter(credentials); 
 		    
-	        service = new Drive.Builder(httpTransport, jsonFactory, null).setHttpRequestInitializer(requestInitializer).build();
-        
-        }catch(Exception e) {
-        	log.error(e.getMessage());
-        	throw e;
-        }
-	           
-	      return service;
+	    Drive service = new Drive.Builder(httpTransport, jsonFactory, null).setHttpRequestInitializer(requestInitializer).build();
+       	        
+	    return service;
 	}
 
 	private void guardarImagen(JsonObject objetoJSON) throws IOException{
