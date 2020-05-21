@@ -27,7 +27,7 @@ import java.util.Vector;
 public class XmlSerializer {
 
 	private Writer writer; // underlying writer
-	private Vector stack; // of XML entity names
+	private Vector<String> stack; // of XML entity names
 	private StringWriter attrsWriter; // current attribute writer
 	private StringBuffer attrs; // current attribute string
 	private boolean empty; // is the current node empty
@@ -47,7 +47,7 @@ public class XmlSerializer {
 		this.closed = true;
 		this.prologWritten = false;
 		if (stack == null) {
-			stack = new Vector(5);
+			stack = new Vector<>(5);
 		} else {
 			stack.removeAllElements();
 		}

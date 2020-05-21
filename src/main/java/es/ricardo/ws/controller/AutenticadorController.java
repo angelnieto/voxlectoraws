@@ -5,9 +5,7 @@ import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.URISyntaxException;
@@ -33,18 +31,22 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 
-import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
+
 import com.google.api.client.http.FileContent;
 import com.google.api.client.http.GenericUrl;
+import com.google.api.client.http.HttpRequestInitializer;
 import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
-import com.google.api.client.json.jackson.JacksonFactory;
+import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
 import com.google.api.services.drive.model.ParentReference;
+import com.google.auth.http.HttpCredentialsAdapter;
+import com.google.auth.oauth2.GoogleCredentials;
+import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -55,7 +57,6 @@ import es.ricardo.ws.ExampleHandler;
 import es.ricardo.ws.ParsedExampleDataSet;
 import es.ricardo.ws.Respuesta;
 import es.ricardo.ws.XmlSerializer;
-import es.ricardo.ws.config.DriveConfig;
 import es.ricardo.ws.config.ServerConfig;
 
 @RestController
@@ -65,18 +66,18 @@ public class AutenticadorController {
 	private static Logger log = LoggerFactory.getLogger(AutenticadorController.class);
 	
 	private String serverFolder;
-	private DriveConfig config;
 	 
     @Autowired 
-    public AutenticadorController(ServerConfig sConfig, DriveConfig dConfig) {
+    public AutenticadorController(ServerConfig sConfig) {
     	if(sConfig != null) {
     		this.serverFolder = sConfig.getTempFolder();
     	}
-    	this.config = dConfig;
     }
     
 	@PostMapping( produces = {"application/json; charset=UTF-8"})
 	 public ResponseEntity<String> getDescription(@RequestBody String json) {
+		 ResponseEntity<String> response = null;
+		
 		 Respuesta respuesta=null;
 		 //int error=-1;
 		 int veces=-1;
@@ -185,10 +186,11 @@ public class AutenticadorController {
 				respuesta.setMensajeError(e.getMessage());
 		}
 
-		if(respuesta!=null)
-		   	return new ResponseEntity<String>(new Gson().toJson(respuesta), HttpStatus.CREATED);
-		else
-		   	return null;
+		if(respuesta!=null) {
+			response = new ResponseEntity<>(new Gson().toJson(respuesta), HttpStatus.CREATED);
+		}
+		
+	  	return response;
 	 }
 
 	 private Drive selectServiceAccount() throws Exception{
@@ -210,34 +212,17 @@ public class AutenticadorController {
 	    scopes.add(DriveScopes.DRIVE);
 	    	
 	    HttpTransport httpTransport = new NetHttpTransport();
-	    JacksonFactory jsonFactory = new JacksonFactory();
-	    GoogleCredential credential = new GoogleCredential.Builder()
-	    	.setTransport(httpTransport)
-	    	.setJsonFactory(jsonFactory)
-	    	.setServiceAccountId(config.getAccount())
-	    	.setServiceAccountScopes(scopes)
-	    	.setServiceAccountPrivateKeyFromP12File(getTempPkc12File())
-	    	.build();
-      
-	    	Drive service = new Drive.Builder(httpTransport, jsonFactory,null).setHttpRequestInitializer(credential).build();
+        GsonFactory jsonFactory = new GsonFactory();
+	  
+        final GoogleCredentials credentials = GoogleCredentials.fromStream(AutenticadorController.class.getResourceAsStream("/assets/serviceaccount.json"))
+	            .createScoped(Lists.newArrayList("https://www.googleapis.com/auth/drive.file"));
+        HttpRequestInitializer requestInitializer = new HttpCredentialsAdapter(credentials); 
+	    
+	      Drive service = new Drive.Builder(httpTransport, jsonFactory, null).setHttpRequestInitializer(requestInitializer).build();
 	           
 	      return service;
-	    }
-
-	private java.io.File getTempPkc12File() throws IOException {
-//	    InputStream pkc12Stream = sContext.getResourceAsStream("/assets/98010a5ea85c050f3883584897d9f2585f8c375a-privatekey.p12");
-	    InputStream pkc12Stream = AutenticadorController.class.getResourceAsStream("/assets/98010a5ea85c050f3883584897d9f2585f8c375a-privatekey.p12");
-	    java.io.File tempPkc12File = java.io.File.createTempFile("certificado", "p12");
-	    OutputStream tempFileStream = new FileOutputStream(tempPkc12File);
-	
-	    int read = 0;
-	    byte[] bytes = new byte[1024];
-	    while ((read = pkc12Stream.read(bytes)) != -1) {
-	        tempFileStream.write(bytes, 0, read);
-	    }
-	    return tempPkc12File;
 	}
-	
+
 	private void guardarImagen(JsonObject objetoJSON) throws IOException{
     	JsonElement jsonElement=objetoJSON.get("imagen");
     	
