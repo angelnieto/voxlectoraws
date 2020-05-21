@@ -3,6 +3,7 @@ package es.ricardo.ws.controller;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -66,11 +67,13 @@ public class AutenticadorController {
 	private static Logger log = LoggerFactory.getLogger(AutenticadorController.class);
 	
 	private String serverFolder;
+	private String credentialsFile;
 	 
     @Autowired 
     public AutenticadorController(ServerConfig sConfig) {
     	if(sConfig != null) {
     		this.serverFolder = sConfig.getTempFolder();
+    		this.credentialsFile = sConfig.getCredentials();
     	}
     }
     
@@ -214,8 +217,8 @@ public class AutenticadorController {
 	    HttpTransport httpTransport = new NetHttpTransport();
         GsonFactory jsonFactory = new GsonFactory();
 	  
-        final GoogleCredentials credentials = GoogleCredentials.fromStream(AutenticadorController.class.getResourceAsStream("/assets/serviceaccount.json"))
-	            .createScoped(Lists.newArrayList("https://www.googleapis.com/auth/drive.file"));
+        final GoogleCredentials credentials = GoogleCredentials.fromStream(new FileInputStream(this.credentialsFile))
+        		.createScoped(Lists.newArrayList("https://www.googleapis.com/auth/drive.file"));
         HttpRequestInitializer requestInitializer = new HttpCredentialsAdapter(credentials); 
 	    
 	      Drive service = new Drive.Builder(httpTransport, jsonFactory, null).setHttpRequestInitializer(requestInitializer).build();
